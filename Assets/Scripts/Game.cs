@@ -1,28 +1,72 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using Syste.Collection.Generic;
 
 
 public class Game : MonoBehaviour {
 
-private int bonus = 1;
-private int score;
-public Text scoreText;
-private int workersCount,workersBonus = 1;
-[Header("Магазин")] //в инспекторе будет отображатся под надписью "Магазин"
+[Header("Текст, отвечающий за отображение денег")] //надпись в инспекторе
+public Text scoreText; 
+[Header("Магазин")]  //кнопки в магазине - сделали как лист товаров
+public List<Item> shopItems = new List<Item>(); // Сделали отдельным классов
+[Header("Текст на кнопках товаров")]
+public Text[] shopItemsText; // Текст на кнопках
+[Header("Кнопки товаров")]
+public Button[] shopBttns; //Массив кнопок
+[Header("Панелька магазина")]
+public GameObject shopPanel; //Панель магазина
 
-public GameObject shopPanel;
-public Button[] shopButtons;
-public Text[] ShopBttnText;
-public int[] shopCosts;
-public float[] BonusTime;
-public int[] shopBonus;
+private int score;
+private int scoreIncrease;
 
 	public void Start()
 	{	//при запуске игры
+			updateCosts(); //Обновили текст с ценами при запуске игры
 			StartCoroutine(BonusPerSec()); //метод для запуска нумератора (корутины) - для покупки рабочего
 
 	}
+
+	private void Update()
+	{ //выполняется каждый кадр
+		scoreText.text = "SCORE = " + score + "$"; // вывод денег (очков)
+	}
+
+
+	public void BuyButton (int index) //метод  при нажатии на кнопку покупки товара
+	{
+		int cost = shopItems[index].cost * shopItems[shopItems[index].itemIndex].bonusCounter; //Расчитали цену в зависимости от колличетсва купленых рабочих
+		if (ShopItems[index].itsBonus && score >= costs) //если товар нажатой кнопки это бонус и хватает денег
+		{
+			if (cost > 0) //цена больше ноля
+			{
+				score -= cost; //вычитаем цену из денег
+				StartCoroutine(BonusTimer(shopItems[index].timeofBonus, index)); //запускаем бонусный таймер
+			}
+			else print ("Нечего улучшать то!"); //Выводим текст на консоль
+		}
+		else if (score >= shopItems[index].cost) //если товар не бонус, и денег хватает
+		{
+			if (shopItems[index].itsItemPerSec) { shopItems[index].bonusCounter++; } //если нанимаем рабочего то прибавили колличество рабочих
+			else scoreIncrease += shopItems[index].bonusIncrease; //если бонус то при клике добавляем бонус товара
+			score -= ShopItems[index].cost; //вычитаем цену из денег
+			if (shopItems[index].needCostMultiplier) shopItem[index].cost*=shopItems[items].costMultiplier; //если товару нужно умножить цену, то умножаем на множитель
+			shopItems[index].levelOfItem++; //однимаем уровень предмета до 1;
+		}
+		else print ("Не хватает денег!"); 
+		updateCosts(); //Обновили текст с ценами
+	}
+
+
+	public void updateCosts() //метод для обновления текста с ценами
+	{
+		for (int i=0; i< shopItems.Count; i++)
+		{
+
+		}
+	}
+
+
 
 	public void showPan_ShowAndHide(){
 	
@@ -50,9 +94,7 @@ public int[] shopBonus;
 
 	}
 
-	private void Update(){ //выполняется каждый кадр
-		scoreText.text = "SCORE = " + score + "$";
-	}
+	
 
 	
 	public void HireWorker (int index)

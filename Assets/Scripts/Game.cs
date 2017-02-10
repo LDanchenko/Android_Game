@@ -8,17 +8,19 @@ public class Game : MonoBehaviour {
 private int bonus = 1;
 private int score;
 public Text scoreText;
-private int workersCount;
+private int workersCount,workersBonus = 1;
 [Header("Магазин")] //в инспекторе будет отображатся под надписью "Магазин"
 
 public GameObject shopPanel;
+public Button[] shopButtons;
 public Text[] ShopBttnText;
 public int[] shopCosts;
+public float[] BonusTime;
 public int[] shopBonus;
 
 	public void Start()
 	{	//при запуске игры
-				StartCoroutine(BonusPerSec()); //метод для запуска нумератора (корутины)
+			StartCoroutine(BonusPerSec()); //метод для запуска нумератора (корутины) - для покупки рабочего
 
 	}
 
@@ -62,14 +64,39 @@ public int[] shopBonus;
 		}
 	}
 
+	public void StartBonusTimer(int index){ //стартуем карутину для бонуса
+		
+		int costs = 2 * workersCount; 
+		ShopBttnText[2].text = "КУПИТЬ ПИВО\n" + costs + "$";
+		if (score >= costs) {
+		StartCoroutine(bonusTimer(BonusTime[index], index));
+		}
+		score -= costs;
+	}
+
 	IEnumerator BonusPerSec() //чтобы купить одного рабочего и получать +1 доллар каждую секунду
 		{
 			while  (true)
 			{
-				score += workersCount * 1;
+				score += (workersCount * workersBonus);
 				yield return new WaitForSeconds(1);	
 			}
 			
+		}
+
+		IEnumerator bonusTimer (float time, int index) //бонус пиво - индекс кнопки
+		{
+				shopButtons[index].interactable = false; //кнопка будет неактивна пока бонус не закончится 
+				if (index == 0 && workersCount > 0){ //если кнопка 0 и рабочие есть метод такой то
+					//пять секунд рабочий дает по два бакса
+					workersBonus *= 2; // добавили бонус 
+					yield return new WaitForSeconds(time); //задержка - сколько длится код;
+					workersBonus /= 2; //востановился бонус
+
+				}
+					shopButtons[index].interactable = true;//включилась кнопка 
+
+
 		}
 
 }

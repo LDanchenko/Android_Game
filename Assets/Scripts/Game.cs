@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
-using Syste.Collection.Generic;
+using System.Collections.Generic;
+using System;
 
 
 public class Game : MonoBehaviour {
@@ -13,12 +14,12 @@ public List<Item> shopItems = new List<Item>(); // Сделали отдельн
 [Header("Текст на кнопках товаров")]
 public Text[] shopItemsText; // Текст на кнопках
 [Header("Кнопки товаров")]
-public Button[] shopBttns; //Массив кнопок
+public Button[] shopButtons; //Массив кнопок
 [Header("Панелька магазина")]
 public GameObject shopPanel; //Панель магазина
 
 private int score;
-private int scoreIncrease;
+private int scoreIncrease = 1;
 
 	public void Start()
 	{	//при запуске игры
@@ -36,7 +37,7 @@ private int scoreIncrease;
 	public void BuyButton (int index) //метод  при нажатии на кнопку покупки товара
 	{
 		int cost = shopItems[index].cost * shopItems[shopItems[index].itemIndex].bonusCounter; //Расчитали цену в зависимости от колличетсва купленых рабочих
-		if (ShopItems[index].itsBonus && score >= costs) //если товар нажатой кнопки это бонус и хватает денег
+		if (shopItems[index].itsBonus && score >= cost) //если товар нажатой кнопки это бонус и хватает денег
 		{
 			if (cost > 0) //цена больше ноля
 			{
@@ -49,8 +50,8 @@ private int scoreIncrease;
 		{
 			if (shopItems[index].itsItemPerSec) { shopItems[index].bonusCounter++; } //если нанимаем рабочего то прибавили колличество рабочих
 			else scoreIncrease += shopItems[index].bonusIncrease; //если бонус то при клике добавляем бонус товара
-			score -= ShopItems[index].cost; //вычитаем цену из денег
-			if (shopItems[index].needCostMultiplier) shopItem[index].cost*=shopItems[items].costMultiplier; //если товару нужно умножить цену, то умножаем на множитель
+			score -= shopItems[index].cost; //вычитаем цену из денег
+			if (shopItems[index].needCostMultiplier) shopItems[index].cost *= shopItems[index].costMultiplier; //если товару нужно умножить цену, то умножаем на множитель
 			shopItems[index].levelOfItem++; //однимаем уровень предмета до 1;
 		}
 		else print ("Не хватает денег!"); 
@@ -60,21 +61,97 @@ private int scoreIncrease;
 
 	public void updateCosts() //метод для обновления текста с ценами
 	{
-		for (int i=0; i< shopItems.Count; i++)
+		for (int i=0; i< shopItems.Count; i++) //Цикл выполняется, пока переменная меньше кол-ва товаров
 		{
-
+			if (shopItems[i].itsBonus) //если товар  - бонус
+			{
+				int cost = shopItems[i].cost*shopItems[shopItems[i].itemIndex].bonusCounter; //расчитывваем цену в зависимости от колличества рабочих
+				shopItemsText[i].text = shopItems[i].name + "\n" + cost + "$"; //обновляем текст кнопки с расчитаной ценой
+			}
+			else shopItemsText[i].text = shopItems[i].name + "\n" + shopItems[i].cost + "$"; //текст кнопки с обычной ценой
 		}
 	}
 
 
+	IEnumerator BonusPerSec() //чтобы купить одного рабочего и получать +1 доллар каждую секунду
+		{
+			while  (true) //бесконечный цикл
+			{
+				for (int i = 0; i < shopItems.Count; i++) {
+				score += (shopItems[i].bonusCounter * shopItems[i].bonusPerSec); //добавляем к игровой валюте бонус рабочих (например)
+				yield return new WaitForSeconds(1);	
+				}
+			}
+			
+		}
 
-	public void showPan_ShowAndHide(){
+		IEnumerator BonusTimer (float time, int index) //бонсный таймер
+		{
+				shopButtons[index].interactable = false; //кнопка будет неактивна пока бонус не закончится 
+				shopItems[shopItems[index].itemIndex].bonusPerSec *=2; //удваиваем бонус рабочих в секунду
+				yield return new WaitForSeconds(time); //задержка - сколько длится код;
+				shopItems[shopItems[index].itemIndex].bonusPerSec *=2; //возвращаем бонус в нормальное состояние
+				shopButtons[index].interactable = true;//включилась кнопка 
+		}
+
+		public void OnClick (){
+
+		score += scoreIncrease;
+
+		}
+
+		public void showPan_ShowAndHide(){
 	
-	shopPanel.SetActive(!shopPanel.activeSelf);
+			shopPanel.SetActive(!shopPanel.activeSelf);
 		
-	}
+		}
 
-	public void shopButtonAddBonus(int index){
+		[Serializable]
+		public class Item //класс товара
+		{
+			[Tooltip("Название используется на кнопках")]
+			public String name;
+			[Tooltip("Цена товара")]
+			public int cost;
+			[Tooltip("Бонус, который добавляется к бонусу при клике")]
+			public int bonusIncrease;
+			[HideInInspector]
+			public int levelOfItem;
+			[Space]
+			[Tooltip("Нужен ли множитель для цены")]
+			public bool needCostMultiplier;
+			[Tooltip("Множитель для цены")]
+			public int costMultiplier;
+			[Space]
+			[Tooltip("Этот товар дает бонус в секунду?")]
+			public bool itsItemPerSec;
+			[Tooltip("Бонус, который дается в секунду")]
+			public int bonusPerSec;
+			[HideInInspector]
+			public int bonusCounter;
+			[Space]
+			[Tooltip("Это временный бонус?")]
+			public bool itsBonus;
+			[Tooltip("Множитель товара, который управляется бонусом (Умножается переменная bonusPerSec)")]
+			public int itemMultiplier;
+			[Tooltip("Индекс товара, который будет управляться бонусом (Умножается переменная bonusPerSec этого товара)")]
+			public int itemIndex;
+			[Tooltip("Длительность бонуса")]
+			public float timeofBonus;
+
+		}
+
+
+}
+
+		/*
+		public void showPan_ShowAndHide(){
+	
+			shopPanel.SetActive(!shopPanel.activeSelf);
+		
+		}
+
+			public void shopButtonAddBonus(int index){
 
 		if (score >= shopCosts[index]) {
 			bonus += shopBonus[index];
@@ -88,11 +165,7 @@ private int scoreIncrease;
 	}
 	}
 
-	public void OnClick (){
-
-	score += bonus;
-
-	}
+	
 
 	
 
@@ -116,29 +189,7 @@ private int scoreIncrease;
 		score -= costs;
 	}
 
-	IEnumerator BonusPerSec() //чтобы купить одного рабочего и получать +1 доллар каждую секунду
-		{
-			while  (true)
-			{
-				score += (workersCount * workersBonus);
-				yield return new WaitForSeconds(1);	
-			}
-			
-		}
-
-		IEnumerator bonusTimer (float time, int index) //бонус пиво - индекс кнопки
-		{
-				shopButtons[index].interactable = false; //кнопка будет неактивна пока бонус не закончится 
-				if (index == 0 && workersCount > 0){ //если кнопка 0 и рабочие есть метод такой то
-					//пять секунд рабочий дает по два бакса
-					workersBonus *= 2; // добавили бонус 
-					yield return new WaitForSeconds(time); //задержка - сколько длится код;
-					workersBonus /= 2; //востановился бонус
-
-				}
-					shopButtons[index].interactable = true;//включилась кнопка 
-
-
-		}
-
 }
+*/
+
+
